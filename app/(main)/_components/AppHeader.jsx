@@ -1,10 +1,12 @@
+import { UserButton } from '@stackframe/stack'
 import Image from 'next/image'
 import React from 'react'
 
 function AppHeader (){
   return (
-    <div>
+    <div className='p-3 shadow-md flex justify-between items-center'>
         <Image src="/logo.svg" alt="logo" width={200} height={200} />
+        <UserButton></UserButton>
       
     </div>
   )
