@@ -1,9 +1,11 @@
 import React from 'react'
+import AppHeader from './_components/AppHeader'
 
 const DashboardLayout = ({children}) => {
   return (
     <div>
-      {children}
+        <AppHeader>{children}</AppHeader>
+    
     </div>
   )
 }

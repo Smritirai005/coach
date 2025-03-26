@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { stackServerApp } from '@stackframe/stack/server';
+import { stackServerApp } from './stack';
+
+
 
 
 export async function middleware(request) {
