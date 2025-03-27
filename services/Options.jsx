@@ -10,7 +10,7 @@ export const ExpertList=[{
 },
 {
     name:"Language Skill",
-    icon:'/language.png'
+    icon:'/languages.png'
 
 },
 {
