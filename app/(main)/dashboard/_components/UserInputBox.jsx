@@ -13,11 +13,29 @@ import { Textarea } from '@/components/ui/textarea'
 import { CoachingExpert } from '@/services/Options'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-  
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { CreateNewRoom } from '@/convex/DiscussionRoom'
+import { LoaderCircle } from 'lucide-react'
 
 function UserInputBox({children,ExpertList}) {
   const [selectedExpert, setSelectedExpert] = useState();
   const [topic, setTopic] = useState();
+  const [loading, setLoading] = useState(false);
+  const createDiscussionRoom=useMutation(api.DiscussionRoom.CreateNewRoom);
+
+  const OnClickNext=async() => {
+    setLoading(true);
+    const result=await createDiscussionRoom({
+      coachingOption:ExpertList?.name,
+      topic:topic,
+      expertName:selectedExpert,
+    })
+    console.log(result);
+    setLoading(false);
+
+  }
+
   return (
     <div>
     <Dialog>
@@ -49,7 +67,9 @@ function UserInputBox({children,ExpertList}) {
               <DialogClose asChild>
               <Button variant={'ghost'}>Cancel</Button>
               </DialogClose>
-              <Button disabled={(!topic || !selectedExpert)}>Next</Button>
+              <Button disabled={!topic || !selectedExpert || loading} onClick={OnClickNext}>
+                {loading ? <LoaderCircle className="animate-spin" /> : "Next"}
+              </Button>
 
             </div>
 
