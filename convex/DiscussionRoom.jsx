@@ -2,6 +2,8 @@ import { defineSchema,defineTable } from "convex/server";
 
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import { query } from "./_generated/server";
+
 
 export const CreateNewRoom=mutation({
     args:{
@@ -21,4 +23,16 @@ export const CreateNewRoom=mutation({
         return result;
     } 
 
+})
+
+export const GetDiscussionRoom=query({
+
+    args:{
+        id:v.id('DiscussionRoom')
+
+    },
+    handler:async(ctx,args)=>{
+        const result=await ctx.db.get(args.id);
+        return result;
+    }
 })
