@@ -10,11 +10,17 @@ import Image from 'next/image'
 import { CoachingExpert } from '@/services/Options'
 import { UserButton } from '@stackframe/stack'
 import { Button } from '@/components/ui/button'
+import RecordRTC from 'recordrtc'
+import { useRef } from 'react'
+
 
 
 function DiscussionRoom() {
     const {roomid} = useParams();
     const [expert, setExpert] = useState();
+    const [enableMic, setEnableMic] = useState(false);
+    const recorder = useRef(null);
+    let silenceTimeout;
     const DiscussionRoomData=useQuery(api.DiscussionRoom.GetDiscussionRoom,{id:roomid});
     console.log(DiscussionRoomData);
     useEffect(() => {
@@ -23,6 +29,51 @@ function DiscussionRoom() {
         setExpert(Expert);
       }
     },[DiscussionRoomData])
+
+    const connectToServer=()=>{
+      setEnableMic(true);
+      if (typeof window !== "undefined" && typeof navigator !== "undefined") {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then((stream) => {
+            recorder.current = new RecordRTC(stream, {
+              type: 'audio',
+              mimeType: 'audio/webm;codecs=pcm',
+              recorderType: RecordRTC.StereoAudioRecorder,
+              timeSlice: 250,
+              desiredSampRate: 16000,
+              numberOfAudioChannels: 1,
+              bufferSize: 4096,
+              audioBitsPerSecond: 128000,
+              ondataavailable: async (blob) => {
+                //if (!realtimeTranscriber.current) return;
+                // Reset the silence detection timer on audio input
+                clearTimeout(silenceTimeout);
+      
+                const buffer = await blob.arrayBuffer();
+      
+                //console.log(buffer)
+      
+                // Restart the silence detection timer
+                silenceTimeout = setTimeout(() => {
+                  console.log('User stopped talking');
+                  // Handle user stopped talking (e.g., send final transcript, stop recording, etc.)
+                }, 2000);
+              },
+            });
+            recorder.current.startRecording();
+          })
+          .catch((err) => console.error(err));
+      }
+      
+    }
+    const disconnect=(e)=>{
+      e.preventDefault();
+      recorder.current.pauseRecording();
+      recorder.current=null;
+      setEnableMic(false);
+    }
+
+    
 
   return (
     <div className='-mt-12'>
@@ -43,7 +94,9 @@ function DiscussionRoom() {
         </div>
         </div>
         <div className='mt-5 flex item-center justify-center'>
-          <Button>Connect</Button>
+          {!enableMic ?<Button onClick={connectToServer}>Connect</Button>
+          :
+          <Button variant="destructive" onClick={disconnect}>Disconnect</Button>}
         </div>
         </div>
 
