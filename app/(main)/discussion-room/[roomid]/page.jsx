@@ -12,6 +12,9 @@ import { UserButton } from '@stackframe/stack'
 import { Button } from '@/components/ui/button'
 import RecordRTC from 'recordrtc'
 import { useRef } from 'react'
+import { RealtimeTranscriber } from 'assemblyai'
+import { getToken } from '@/services/GlobalServices'
+
 
 
 
@@ -20,6 +23,7 @@ function DiscussionRoom() {
     const [expert, setExpert] = useState();
     const [enableMic, setEnableMic] = useState(false);
     const recorder = useRef(null);
+    const realtimeTranscriber = useRef(null);
     let silenceTimeout;
     const DiscussionRoomData=useQuery(api.DiscussionRoom.GetDiscussionRoom,{id:roomid});
     console.log(DiscussionRoomData);
@@ -30,8 +34,21 @@ function DiscussionRoom() {
       }
     },[DiscussionRoomData])
 
-    const connectToServer=()=>{
+    const connectToServer= async ()=>{
       setEnableMic(true);
+
+      realtimeTranscriber.current=new RealtimeTranscriber({
+        token:await getToken(),
+        sample_rate:16000
+
+      })
+      realtimeTranscriber.current.on('transcript', (transcript) => {
+        console.log(transcript)
+
+      })
+      await realtimeTranscriber.current.connect();
+
+
       if (typeof window !== "undefined" && typeof navigator !== "undefined") {
         navigator.mediaDevices.getUserMedia({ audio: true })
           .then((stream) => {
@@ -45,13 +62,14 @@ function DiscussionRoom() {
               bufferSize: 4096,
               audioBitsPerSecond: 128000,
               ondataavailable: async (blob) => {
-                //if (!realtimeTranscriber.current) return;
+                if (!realtimeTranscriber.current) return;
                 // Reset the silence detection timer on audio input
                 clearTimeout(silenceTimeout);
       
                 const buffer = await blob.arrayBuffer();
       
-                //console.log(buffer)
+                console.log(buffer)
+                realtimeTranscriber.current.sendAudio(buffer);
       
                 // Restart the silence detection timer
                 silenceTimeout = setTimeout(() => {
@@ -66,8 +84,9 @@ function DiscussionRoom() {
       }
       
     }
-    const disconnect=(e)=>{
+    const disconnect=async(e)=>{
       e.preventDefault();
+      await realtimeTranscriber.current.close();
       recorder.current.pauseRecording();
       recorder.current=null;
       setEnableMic(false);
